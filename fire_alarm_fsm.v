@@ -19,20 +19,21 @@ module fire_alarm_fsm (
     reg [1:0] current_state, next_state; // Thanh ghi lưu trạng thái hiện tại và kế tiếp
     
     // --- 1. BỘ ĐẾM XÁC NHẬN KHÓI ---
-    reg [3:0] smoke_timer;               // Thanh ghi đếm thời gian khói duy trì
-    parameter SMOKE_DELAY_LIMIT = 4'd10; // Giới hạn đếm 10 nhịp để xác nhận cháy
+    reg [31:0] smoke_timer;              
+    parameter SMOKE_DELAY_LIMIT = 32'd50000; // Giới hạn đếm 
 
     // --- 2. BỘ ĐẾM CHUÔNG NGẮT QUÃNG ---
-    reg [3:0] beep_counter;              // Bộ đếm tạo nhịp Beep...Beep...
-    wire beep_on;                        // Tín hiệu điều khiển bật/tắt chuông theo nhịp
-    assign beep_on = (beep_counter < 4'd8); // Bật chuông ở 8 nhịp đầu, tắt ở 8 nhịp sau
+    reg [31:0] beep_counter;             
+    wire beep_on;                        
+    parameter BEEP_HALF_PERIOD = 32'd5000;   // Nhịp chớp của chuông
+    assign beep_on = (beep_counter < BEEP_HALF_PERIOD); 
 
     // Khối logic tuần tự: Cập nhật trạng thái và bộ đếm
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin                // Khi reset
             current_state <= NORMAL;     // Quay về trạng thái bình thường
-            smoke_timer <= 4'd0;         // Xóa bộ đếm khói
-            beep_counter <= 4'd0;        // Xóa bộ đếm chuông
+            smoke_timer <= 32'd0;        // Xóa bộ đếm khói
+            beep_counter <= 32'd0;       // Xóa bộ đếm chuông
         end else begin                   // Khi hoạt động
             current_state <= next_state; // Chuyển sang trạng thái tiếp theo
             
@@ -41,10 +42,15 @@ module fire_alarm_fsm (
                 if (smoke_timer < SMOKE_DELAY_LIMIT)
                     smoke_timer <= smoke_timer + 1'b1; // Tăng dần bộ đếm
             end else begin
-                smoke_timer <= 4'd0;     // Nếu hết khói hoặc thoát cảnh báo thì xóa đếm
+                smoke_timer <= 32'd0;    // Nếu hết khói hoặc thoát cảnh báo thì xóa đếm
             end
 
-            beep_counter <= beep_counter + 1'b1; // Bộ đếm chuông chạy liên tục
+            // Logic đếm nhịp chuông: Đếm đến giới hạn thì quay đầu về 0
+            if (beep_counter >= (BEEP_HALF_PERIOD * 2)) begin
+                beep_counter <= 32'd0;
+            end else begin
+                beep_counter <= beep_counter + 1'b1;
+            end
         end
     end
 
@@ -54,11 +60,11 @@ module fire_alarm_fsm (
         case (current_state)
             NORMAL: begin                // Nếu đang ở trạng thái Bình thường
                 if (manual_call) next_state = ALARM; // Nhấn nút tay thì báo động ngay
-                else if (smoke_alert || temp_alert || gas_alert) next_state = WARNING; // Có cờ báo thì vào Cảnh báo
+                else if (smoke_alert || temp_alert || gas_alert) next_state = WARNING; 
             end
 
             WARNING: begin               // Nếu đang ở trạng thái Cảnh báo
-                if (manual_call) next_state = ALARM; // Nhấn nút tay thì báo động ngay
+                if (manual_call) next_state = ALARM; 
                 // Cháy thật khi: Nhiệt quá cao HOẶC (có Khói và đã đợi đủ lâu)
                 else if (temp_alert || (smoke_alert && (smoke_timer >= SMOKE_DELAY_LIMIT))) 
                     next_state = ALARM;
@@ -67,7 +73,7 @@ module fire_alarm_fsm (
                     next_state = NORMAL;
             end
 
-            ALARM: next_state = ALARM;   // Đã báo động thì ở lỳ tại đây (Chốt) cho đến khi Reset
+            ALARM: next_state = ALARM;   // Đã báo động thì ở lỳ tại đây cho đến khi Reset
             default: next_state = NORMAL;
         endcase
     end
@@ -79,11 +85,19 @@ module fire_alarm_fsm (
         warning_led = 1'b0;              // Mặc định tắt đèn LED
 
         case (current_state)
-            WARNING: warning_led = 1'b1; // Trạng thái cảnh báo: Chỉ bật đèn LED
-            ALARM: begin                 // Trạng thái báo động cháy
-                warning_led = 1'b1;      // Bật đèn LED
-                sprinkler   = 1'b1;      // Bật vòi phun nước
-                alarm_bell  = beep_on;   // Bật chuông theo nhịp ngắt quãng (Beep...Beep...)
+            WARNING: begin               
+                warning_led = 1'b1;      // Luôn bật đèn LED ở trạng thái cảnh báo
+                
+                // NẾU CÓ RÒ RỈ GAS: Bật thêm chuông kêu tít tít
+                if (gas_alert) begin
+                    alarm_bell = beep_on; 
+                end
+            end
+            
+            ALARM: begin                 // Trạng thái báo động cháy thật
+                warning_led = 1'b1;      
+                sprinkler   = 1'b1;      // Đã cháy thì bật cả vòi phun
+                alarm_bell  = beep_on;   
             end
             default: ;
         endcase

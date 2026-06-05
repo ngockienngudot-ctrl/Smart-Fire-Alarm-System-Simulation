@@ -1,44 +1,55 @@
 module flame_monitor (
-    input wire clk,
-    input wire reset_n,
-    input wire [9:0] ir_data, // Dữ liệu từ ADC
-    output reg [7:0] hz_out,
-    output reg fire_alarm
+    input wire clk,           // Clock hệ thống
+    input wire reset_n,       // Reset tích cực mức thấp
+    input wire [9:0] ir_data, // Dữ liệu ADC từ cảm biến
+    output reg [7:0] hz_out,  // Giữ nguyên cổng này để không báo lỗi ở file top
+    output reg fire_alarm     // Cờ báo cháy (1 = Có lửa)
 );
 
-    // --- 1. KHAI BÁO CÁC THAM SỐ VÀ BIẾN NỘI BỘ ---
-    parameter ONE_SECOND_LIMIT = 50_000_000;
-    
-    // Tạo một dây dẫn để chứa tín hiệu đã được làm sạch
-    wire ir_signal_clean; 
-    
-    // Giả sử bạn có một logic so sánh ngưỡng để tạo ra tín hiệu thô (1-bit)
+    wire ir_signal_clean;
     wire raw_ir_input = (ir_data > 512); 
 
-    // --- 2. CHÈN MODULE LỌC VÀO ĐÂY ---
-     signal_stabilizer #( .FILTER_LIMIT(1000) ) filter_inst (
+    // --- 1. MODULE LỌC NHIỄU (Giữ nguyên) ---
+    signal_stabilizer #( .FILTER_LIMIT(1000) ) filter_inst (
         .clk(clk),
         .reset_n(reset_n),
-        .raw_signal(raw_ir_input), // Lấy tín hiệu thô
-        .clean_signal(ir_signal_clean) // Xuất ra tín hiệu sạch
+        .raw_signal(raw_ir_input),
+        .clean_signal(ir_signal_clean)
     );
 
-    // --- 3. LOGIC XỬ LÝ CHÍNH ---
-    reg [25:0] timer_cnt;
-    reg [7:0]  pulse_cnt;
+    // --- 2. LOGIC MỚI: NHẤN GIỮ LIÊN TỤC (Giống cảm biến khói) ---
+    reg [31:0] flame_timer; 
+    
+    // Giới hạn thời gian chờ. Bạn có thể copy con số từ biến SMOKE_DELAY_LIMIT 
+    // bên file fire_alarm_fsm.v sang đây để thời gian chờ 2 phím là như nhau.
+    parameter FLAME_DELAY_LIMIT = 32'd20000; 
 
     always @(posedge clk or negedge reset_n) begin
-    if (!reset_n) begin
-        // Reset logic: Bắt buộc phải đưa các bộ đếm về 0 khi khởi động
-        timer_cnt <= 26'd0;
-        pulse_cnt <= 8'd0;
-    end else begin
-        // QUAN TRỌNG: Thay vì dùng raw_ir_input,
-        // sử dụng ir_signal_clean để đếm xung hồng ngoại (đã xóa điều kiện state ảo)
-        if (ir_signal_clean) begin
-            pulse_cnt <= pulse_cnt + 1;
+        if (!reset_n) begin
+            // Khi reset: Xóa bộ đếm và tắt báo động
+            flame_timer <= 32'd0;
+            fire_alarm  <= 1'b0;
+            hz_out      <= 8'd0; // Bỏ tính năng đo Hz, gán cứng bằng 0
+        end else begin
+            
+            // Nếu phát hiện tia hồng ngoại (đã qua lọc nhiễu)
+            if (ir_signal_clean == 1'b1) begin
+                
+                // Cặm cụi đếm lên
+                if (flame_timer < FLAME_DELAY_LIMIT) begin
+                    flame_timer <= flame_timer + 1'b1;
+                end else begin
+                    // Nếu giữ đủ lâu, bật cờ báo cháy
+                    fire_alarm <= 1'b1;
+                end
+
+            end else begin
+                // NGAY KHI NHẢ TAY (ir_signal_clean == 0)
+                // Lập tức reset toàn bộ bộ đếm và tắt cờ báo cháy
+                flame_timer <= 32'd0;
+                fire_alarm  <= 1'b0;
+            end
+            
         end
     end
-end
-
 endmodule
