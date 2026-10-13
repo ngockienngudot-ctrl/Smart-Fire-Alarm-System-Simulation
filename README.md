@@ -1,4 +1,4 @@
-# 🔥 Smart Fire Alarm System Co-Simulation
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/64864f92-af25-436c-8e15-d5d185afd8d4" /># 🔥 Smart Fire Alarm System Co-Simulation
 
 ## 📌 Overview
 This project is a hardware-software co-simulation of a Smart Fire Alarm System. It combines **Verilog HDL** for core hardware logic and signal processing with a **Python (Pygame)** graphical interface for real-time interaction. The communication between the software GUI and the hardware simulation is seamlessly handled by **Cocotb**.
@@ -49,13 +49,17 @@ Make sure you have the following installed:
    git clone [https://github.com/ngockienngudot-ctrl/Smart-Fire-Alarm-System-Simulation.git](https://github.com/ngockienngudot-ctrl/Smart-Fire-Alarm-System-Simulation.git)
    cd Smart-Fire-Alarm-System-Simulation
    
-2, Run the simulation:
-   '''bash
+2. Run the simulation:
+   ```bash
    python run.py
 
-3, GUI Controls:
+3. GUI Controls:
   - Up/Down Arrows: Adjust Temperature
   - Left/Right Arrows: Adjust Gas Concentration
   - K: Toggle Smoke Sensor
   - L: Toggle Infrared Flame Sensor
   - E: Trigger Manual Emergency Button
+
+
+
+
