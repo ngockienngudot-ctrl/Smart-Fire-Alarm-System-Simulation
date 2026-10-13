@@ -38,28 +38,30 @@ The system is highly modularized into 12 specific files. Here is what each file 
 ## 💻 How to Run Locally
 
 ### Prerequisites
-Make sure you have the following installed:
 - Python 3.x
-- `pygame` and `cocotb` (install via `pip install pygame cocotb cocotb-bus`)
 - Icarus Verilog (`iverilog`)
+- Python packages:
+```bash
+  pip install pygame cocotb cocotb-bus
+```
 
 ### Execution
 1. Clone the repository:
-   ```bash
-   git clone [https://github.com/ngockienngudot-ctrl/Smart-Fire-Alarm-System-Simulation.git](https://github.com/ngockienngudot-ctrl/Smart-Fire-Alarm-System-Simulation.git)
+```bash
+   git clone https://github.com/ngockienngudot-ctrl/Smart-Fire-Alarm-System-Simulation.git
    cd Smart-Fire-Alarm-System-Simulation
-   
+```
+
 2. Run the simulation:
-   ```bash
+```bash
    python run.py
+```
 
 3. GUI Controls:
-  - Up/Down Arrows: Adjust Temperature
-  - Left/Right Arrows: Adjust Gas Concentration
-  - K: Toggle Smoke Sensor
-  - L: Toggle Infrared Flame Sensor
-  - E: Trigger Manual Emergency Button
-
-
+   - **↑ / ↓**: Adjust temperature
+   - **← / →**: Adjust gas concentration
+   - **K**: Toggle smoke sensor
+   - **L**: Toggle infrared flame sensor
+   - **E**: Trigger manual emergency button
 
 
