@@ -1,4 +1,4 @@
-## 🔥 Smart Fire Alarm System Co-Simulation
+# 🔥 Smart Fire Alarm System Co-Simulation
 
 ## 📌 Overview
 This project is a hardware-software co-simulation of a Smart Fire Alarm System. It combines **Verilog HDL** for core hardware logic and signal processing with a **Python (Pygame)** graphical interface for real-time interaction. The communication between the software GUI and the hardware simulation is seamlessly handled by **Cocotb**.
