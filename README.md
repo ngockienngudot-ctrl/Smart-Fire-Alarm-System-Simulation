@@ -48,3 +48,14 @@ Make sure you have the following installed:
    ```bash
    git clone [https://github.com/ngockienngudot-ctrl/Smart-Fire-Alarm-System-Simulation.git](https://github.com/ngockienngudot-ctrl/Smart-Fire-Alarm-System-Simulation.git)
    cd Smart-Fire-Alarm-System-Simulation
+   
+2, Run the simulation:
+   '''bash
+   python run.py
+
+3, GUI Controls:
+  - Up/Down Arrows: Adjust Temperature
+  - Left/Right Arrows: Adjust Gas Concentration
+  - K: Toggle Smoke Sensor
+  - L: Toggle Infrared Flame Sensor
+  - E: Trigger Manual Emergency Button
