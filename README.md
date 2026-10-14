@@ -69,5 +69,6 @@ This project is a hardware-software co-simulation of a Smart Fire Alarm System. 
    - **K**: Toggle smoke sensor
    - **L**: Toggle infrared flame sensor
    - **E**: Trigger manual emergency button
+   - **R**: Hard Reset (rst_n)
 
 
